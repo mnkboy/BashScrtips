@@ -7,6 +7,7 @@ PUBLISHED_PATH=$RAW_PATH'published/'
 TEST_PATH='./raw/'
 OUTPUT_PATH='xml_files/'
 EXTERNAL_INTERNAL_ID_FILE="external_internal_id_file.txt"
+CURRENT_DIR=$(pwd)
 
 #Variables de archivos
 SUFIJO='.tar'
@@ -19,7 +20,7 @@ path_array[2]=$PUBLISHED_PATH
 # Podemos combinar los arrays con bucles utilizando
 for x in ${path_array[*]}; do
     #Declaramos el path para trabajar
-    WD_PATH=${x}    
+    WD_PATH=${x}
 
     #Ejecutamos el comando
     LISTA=$(find $WD_PATH -type f -printf "%f\n")
@@ -28,11 +29,10 @@ for x in ${path_array[*]}; do
     cd $OUTPUT_PATH
 
     # imprimir_encabezado "IMPRIMIMOS NOMBRE DE LOS ARCHIVOS"
-    for item in $LISTA; do        
+    for item in $LISTA; do
 
         #Verificamos si existe el archivo
         if [[ ! -f $WD_PATH$item ]]; then
-            #echo "El carchivo no existe: "$WD_PATH$item
             continue
         fi
 
@@ -44,15 +44,21 @@ for x in ${path_array[*]}; do
 
         #Quitamos el sufijo tar
         string=$item
-        cleanItem=${string/%$SUFIJO/}        
+
+        #Verificamos si el elmento lo tenemos en la lista
+        cleanItem=${string/%$SUFIJO/}
+        
+        
+        #Verificamos si existe el archivo
+        if [[ ! -f $EXTERNAL_INTERNAL_ID_FILE ]]; then
+            #echo "El carchivo no existe."
+            touch $EXTERNAL_INTERNAL_ID_FILE
+        fi
+
+        c=$(grep -n $cleanItem "./"$EXTERNAL_INTERNAL_ID_FILE | wc -l)
 
         #Verificamos si existe el directorio
-        if [[ ! -d $cleanItem ]]; then
-            #Verificamos si existe el archivo
-            if [[ ! -f $EXTERNAL_INTERNAL_ID_FILE ]]; then
-                #echo "El carchivo no existe."
-                touch $EXTERNAL_INTERNAL_ID_FILE
-            fi
+        if [[ ! $c -gt 0 ]]; then
 
             #Ejecutamos la extraccion de los archivos xml
             tar -xvf $WD_PATH$item --wildcards --no-anchored '*events.xml*'
@@ -64,12 +70,15 @@ for x in ${path_array[*]}; do
             #Definimos la linea de llave valor
             key_value_line="External: "$externalId" Internal: "$internalId
 
+            #Eliminamos el archivo creado
+            rm -R ./$internalId
+
             #Agregamos la linea
             echo $key_value_line >>$EXTERNAL_INTERNAL_ID_FILE
         fi
     done
 
     #Nos regresamos a la carpeta original
-    cd ..
+    cd $CURRENT_DIR
 
 done

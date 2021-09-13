@@ -72,12 +72,15 @@ sed -i '13i ssl_dhparam /etc/nginx/ssl/dhp-4096.pem;' /etc/nginx/sites-available
 #Verificamos nuestra propia ip
 ip addr
 
+ip addr | grep "inet" | grep "/32" | sed 's/\/32.*//' | sed 's/\/32//' | sed 's/\inet\ //' && ip addr | grep "inet6" | grep "/64" | sed 's/\/64.*//' | sed 's/\/64//' | sed 's/\inet6\ //'
+
 cat > /etc/nginx/conf.d/bigbluebutton_sip_addr_map.conf <<EOF
 map \$remote_addr \$freeswitch_addr {
     "~:"    [fe80::d250:99ff:fedf:e0fc];
     default    74.208.211.182;
 }
 EOF
+
 
 
 cat > /etc/bigbluebutton/nginx/sip.nginx << EOF
